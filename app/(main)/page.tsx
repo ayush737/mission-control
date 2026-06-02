@@ -1,9 +1,11 @@
 import { prisma } from "@/lib/prisma";
 import { todayKey } from "@/lib/dates";
 import { formatMoney, toNumber } from "@/lib/finance";
+import { dailyMissionProfile, ensureTodaysMission } from "@/lib/daily-mission";
 import {
   addBigThreeTask,
   deleteBigThreeTask,
+  toggleDailyMissionCompletion,
   toggleBigThreeTask,
   toggleHabit,
   updateAppConfig,
@@ -15,6 +17,7 @@ import Link from "next/link";
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
+  const todayMission = await ensureTodaysMission();
   const [config, snapshot, habits, skills, bigThreeTasks] = await Promise.all([
     prisma.appConfig.findUnique({ where: { id: "singleton" } }),
     prisma.moneySnapshot.findUnique({ where: { id: "singleton" } }),
@@ -38,6 +41,92 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-8">
+      <section className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+        <Card className="relative overflow-hidden">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(34,211,238,0.14),transparent_30%),radial-gradient(circle_at_bottom_left,rgba(16,185,129,0.1),transparent_25%)]" />
+          <div className="relative">
+            <SectionTitle
+              eyebrow="Today's Mission"
+              title={todayMission.mission}
+              description="Your automatic daily plan is generated from your current money, career, and fitness situation."
+            />
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <StatCard label="Date" value={todayMission.date} helper="Generated for today when you opened the dashboard." />
+              <StatCard label="Status" value={todayMission.completed ? "Completed" : "In progress"} helper={todayMission.completed ? "Nice work." : "Still open."} />
+            </div>
+
+            <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              <div className="rounded-3xl border border-slate-800 bg-slate-950/70 p-4">
+                <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Top Task 1</p>
+                <p className="mt-2 text-lg font-medium text-white">{todayMission.topTask1}</p>
+              </div>
+              <div className="rounded-3xl border border-slate-800 bg-slate-950/70 p-4">
+                <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Top Task 2</p>
+                <p className="mt-2 text-lg font-medium text-white">{todayMission.topTask2}</p>
+              </div>
+              <div className="rounded-3xl border border-slate-800 bg-slate-950/70 p-4">
+                <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Top Task 3</p>
+                <p className="mt-2 text-lg font-medium text-white">{todayMission.topTask3}</p>
+              </div>
+            </div>
+
+            <div className="mt-6 grid gap-3 md:grid-cols-2">
+              <div className="rounded-3xl border border-slate-800 bg-slate-950/70 p-4">
+                <p className="text-xs uppercase tracking-[0.3em] text-cyan-300/70">Finance Task</p>
+                <p className="mt-2 text-base text-white">{todayMission.financeTask}</p>
+              </div>
+              <div className="rounded-3xl border border-slate-800 bg-slate-950/70 p-4">
+                <p className="text-xs uppercase tracking-[0.3em] text-cyan-300/70">Career Task</p>
+                <p className="mt-2 text-base text-white">{todayMission.careerTask}</p>
+              </div>
+              <div className="rounded-3xl border border-slate-800 bg-slate-950/70 p-4">
+                <p className="text-xs uppercase tracking-[0.3em] text-cyan-300/70">Fitness Task</p>
+                <p className="mt-2 text-base text-white">{todayMission.fitnessTask}</p>
+              </div>
+              <div className="rounded-3xl border border-slate-800 bg-slate-950/70 p-4">
+                <p className="text-xs uppercase tracking-[0.3em] text-cyan-300/70">Avoid Today</p>
+                <p className="mt-2 text-base text-white">{todayMission.avoidToday}</p>
+              </div>
+            </div>
+
+            <div className="mt-6 rounded-3xl border border-slate-800 bg-slate-950/70 p-4">
+              <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Reflection question</p>
+              <p className="mt-2 text-base text-white">{todayMission.reflectionQuestion}</p>
+            </div>
+
+            <form action={toggleDailyMissionCompletion} className="mt-6 flex flex-wrap items-center gap-3">
+              <input type="hidden" name="date" value={todayMission.date} />
+              <input type="hidden" name="completed" value={String(!todayMission.completed)} />
+              <Button type="submit" variant={todayMission.completed ? "secondary" : "primary"}>
+                {todayMission.completed ? "Mark incomplete" : "Mark complete"}
+              </Button>
+              <Badge tone={todayMission.completed ? "success" : "warning"}>
+                {todayMission.completed ? "Completed" : "Not complete"}
+              </Badge>
+            </form>
+          </div>
+        </Card>
+
+        <Card>
+          <SectionTitle
+            eyebrow="User Profile"
+            title="Mission context"
+            description="The daily generator is tailored to your current situation and future goal."
+          />
+          <div className="grid gap-3">
+            <StatCard label="Name" value={dailyMissionProfile.name} />
+            <StatCard label="Role" value={dailyMissionProfile.role} />
+            <StatCard label="Emergency Fund Target" value={`₹${dailyMissionProfile.emergencyFundTarget.toLocaleString("en-IN")}`} />
+            <StatCard label="Current Emergency Fund" value={`₹${dailyMissionProfile.currentEmergencyFund.toLocaleString("en-IN")}`} />
+            <StatCard label="Total Debt" value={`₹${dailyMissionProfile.totalDebt.toLocaleString("en-IN")}`} />
+            <StatCard label="Monthly Salary" value={`₹${dailyMissionProfile.monthlySalary}`} />
+            <StatCard label="Target Country" value={dailyMissionProfile.targetCountry} />
+            <StatCard label="Target Date" value={dailyMissionProfile.targetDate} />
+          </div>
+        </Card>
+      </section>
+
       <section className="grid gap-6 lg:grid-cols-[1.3fr_0.7fr]">
         <Card className="relative overflow-hidden">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(34,211,238,0.15),transparent_30%),radial-gradient(circle_at_bottom_left,rgba(16,185,129,0.12),transparent_25%)]" />

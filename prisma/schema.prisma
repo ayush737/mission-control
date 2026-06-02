@@ -124,3 +124,22 @@ model ReviewNote {
   updatedAt DateTime @updatedAt
   createdAt DateTime @default(now())
 }
+
+model DailyMission {
+  id                  Int      @id @default(autoincrement())
+  date                String   @unique
+  mission             String   @default("Win Today")
+  topTask1            String   @map("top_task_1")
+  topTask2            String   @map("top_task_2")
+  topTask3            String   @map("top_task_3")
+  fitnessTask         String   @map("fitness_task")
+  careerTask          String   @map("career_task")
+  financeTask         String   @map("finance_task")
+  avoidToday          String   @map("avoid_today")
+  reflectionQuestion  String   @map("reflection_question")
+  completed           Boolean  @default(false)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@map("daily_missions")
+}

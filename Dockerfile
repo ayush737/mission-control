@@ -24,6 +24,8 @@ RUN npm ci --omit=dev
 
 COPY --from=build /app/.next ./.next
 COPY --from=build /app/prisma ./prisma
+COPY --from=build /app/lib ./lib
+COPY --from=build /app/scripts ./scripts
 
 EXPOSE 3000
 CMD ["sh", "-c", "npx prisma db push && npm run start"]

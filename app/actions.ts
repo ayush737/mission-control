@@ -255,3 +255,15 @@ export async function saveReviewNote(formData: FormData) {
   revalidatePath("/review");
   revalidatePath("/career");
 }
+
+export async function toggleDailyMissionCompletion(formData: FormData) {
+  const date = toText(formData.get("date")) || todayKey();
+  const completed = formData.get("completed") === "true";
+
+  await prisma.dailyMission.update({
+    where: { date },
+    data: { completed }
+  });
+
+  revalidatePath("/");
+}
