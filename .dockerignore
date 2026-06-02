@@ -1,0 +1,8 @@
+node_modules
+.next
+outputs
+work
+prisma/*.db
+prisma/*.db-journal
+.env
+.git

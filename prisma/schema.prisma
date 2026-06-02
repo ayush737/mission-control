@@ -1,0 +1,126 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model AppConfig {
+  id                    String   @id @default("singleton")
+  mission               String   @default("Become Debt Free")
+  missionProgress       Int      @default(12)
+  monthlyIncome         Float    @default(5000)
+  extraDebtPayment      Float    @default(500)
+  currentFocusTask      String   @default("Choose the hardest task and begin.")
+  weeklyWinGoal         String   @default("Keep the streak alive.")
+  updatedAt             DateTime @updatedAt
+}
+
+model MoneySnapshot {
+  id            String   @id @default("singleton")
+  savings       Decimal  @default(0)
+  debt          Decimal  @default(0)
+  emis          Decimal  @default(0)
+  monthlyBills  Decimal  @default(0)
+  netWorth      Decimal  @default(0)
+  updatedAt     DateTime @updatedAt
+}
+
+model BigThreeTask {
+  id         Int      @id @default(autoincrement())
+  dayKey     String
+  title      String
+  completed  Boolean  @default(false)
+  position   Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([dayKey, position])
+}
+
+model Habit {
+  id        Int         @id @default(autoincrement())
+  name      String      @unique
+  sortOrder Int         @default(0)
+  logs      HabitLog[]
+}
+
+model HabitLog {
+  id        Int      @id @default(autoincrement())
+  habitId   Int
+  dayKey    String
+  completed Boolean  @default(false)
+  habit     Habit    @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([habitId, dayKey])
+}
+
+model Skill {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  progress    Int      @default(0)
+  notes       String   @default("")
+  studyHours  Float    @default(0)
+  updatedAt   DateTime @updatedAt
+  studyLogs   StudyLog[]
+}
+
+model StudyLog {
+  id        Int      @id @default(autoincrement())
+  skillId   Int
+  dayKey    String
+  hours     Float
+  skill     Skill    @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model Emi {
+  id               Int      @id @default(autoincrement())
+  name             String
+  amount           Decimal
+  interest         Float
+  remainingMonths  Int
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model CreditCard {
+  id                Int      @id @default(autoincrement())
+  name              String
+  balance           Decimal
+  apr               Float
+  minimumPayment    Decimal
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model Bill {
+  id         Int      @id @default(autoincrement())
+  name       String
+  amount     Decimal
+  dueDay     Int?
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model FocusSession {
+  id          Int       @id @default(autoincrement())
+  task        String
+  minutes     Int
+  cycleType   String    @default("work")
+  completedAt DateTime  @default(now())
+}
+
+model ReviewNote {
+  id        Int      @id @default(autoincrement())
+  weekKey   String   @unique
+  wins      String   @default("")
+  losses    String   @default("")
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+}
